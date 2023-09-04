@@ -30,6 +30,7 @@ public:
 protected:
   void update();
   void setAlert(const Alert &alert);
+  bool shouldPlaySound(const Alert &alert);
 
   SubMaster sm;
   Alert current_alert = {};
