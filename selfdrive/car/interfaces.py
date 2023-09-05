@@ -3,6 +3,7 @@ import os
 import time
 import numpy as np
 from abc import abstractmethod, ABC
+from difflib import SequenceMatcher
 from json import load
 from typing import Any, Dict, Optional, Tuple, List, Callable, Union
 
@@ -31,7 +32,10 @@ FRICTION_THRESHOLD = 0.3
 TORQUE_PARAMS_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/params.yaml')
 TORQUE_OVERRIDE_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/override.yaml')
 TORQUE_SUBSTITUTE_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/substitute.yaml')
+TORQUE_NN_MODEL_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/lat_models')
 
+def similarity(s1:str, s2:str) -> float:
+  return SequenceMatcher(None, s1, s2).ratio()
 
 def get_torque_params(candidate):
   with open(TORQUE_SUBSTITUTE_PATH) as f:
@@ -122,19 +126,37 @@ class FluxModel:
       _ = W
       _ = b
 
-def get_nn_model_path(car, eps_firmware) -> Union[str, None]:
-  model_path = f"/data/openpilot/selfdrive/car/torque_data/lat_models/{car}_{eps_firmware}.json"
-  if not os.path.isfile(model_path):
-    model_path = f"/data/openpilot/selfdrive/car/torque_data/lat_models/{car}.json"
-    if not os.path.isfile(model_path):
-      model_path = None
-  return model_path
+def get_nn_model_path(car, eps_firmware) -> Tuple[Union[str, None, float]]:
+  def check_nn_path(check_model):
+    model_path = None
+    max_similarity = -1.0
+    for f in os.listdir(TORQUE_NN_MODEL_PATH):
+      if f.endswith(".json"):
+        model = f.replace(".json", "").replace(f"{TORQUE_NN_MODEL_PATH}/","")
+        similarity_score = similarity(model, check_model)
+        if similarity_score > max_similarity:
+          max_similarity = similarity_score
+          model_path = os.path.join(TORQUE_NN_MODEL_PATH, f)
+    return model_path, max_similarity
 
-def get_nn_model(car, eps_firmware) -> Union[FluxModel, None]:
-  model = get_nn_model_path(car, eps_firmware)
+  if len(eps_firmware) > 3:
+    eps_firmware = eps_firmware.replace("\\", "")
+    check_model = f"{car} {eps_firmware}"
+  else:
+    check_model = car
+  model_path, max_similarity = check_nn_path(check_model)
+  if 0.0 <= max_similarity < 0.9:
+    check_model = car
+    model_path, max_similarity = check_nn_path(check_model)
+    if 0.0 <= max_similarity < 0.9:
+      model_path = None
+  return model_path, max_similarity
+
+def get_nn_model(car, eps_firmware) -> Tuple[Union[FluxModel, None, float]]:
+  model, similarity_score = get_nn_model_path(car, eps_firmware)
   if model is not None:
     model = FluxModel(model)
-  return model
+  return model, similarity_score
 
 # generic car and radar interfaces
 
@@ -142,8 +164,7 @@ class CarInterfaceBase(ABC):
   def __init__(self, CP, CarController, CarState):
     self.CP = CP
     self.VM = VehicleModel(CP)
-    eps_firmware = next((fw.fwVersion for fw in CP.carFw if fw.ecu == "eps"), "")
-    self.has_lateral_torque_nn = self.initialize_lat_torque_nn(CP.carFingerprint, eps_firmware)
+    eps_firmware = str(next((fw.fwVersion for fw in CP.carFw if fw.ecu == "eps"), ""))
 
     self.frame = 0
     self.steering_unpressed = 0
@@ -168,11 +189,13 @@ class CarInterfaceBase(ABC):
     if CarController is not None:
       self.CC = CarController(self.cp.dbc_name, CP, self.VM)
 
+    params = Params()
+    self.has_lateral_torque_nn = self.initialize_lat_torque_nn(CP.carFingerprint, eps_firmware) and params.get_bool("NNFF")
   def get_ff_nn(self, x):
     return self.lat_torque_nn_model.evaluate(x)
 
   def initialize_lat_torque_nn(self, car, eps_firmware):
-    self.lat_torque_nn_model = get_nn_model(car, eps_firmware)
+    self.lat_torque_nn_model, _ = get_nn_model(car, eps_firmware)
     return (self.lat_torque_nn_model is not None)
 
   @staticmethod
@@ -198,9 +221,10 @@ class CarInterfaceBase(ABC):
     # Enable torque controller for all cars
     CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
     eps_firmware = str(next((fw.fwVersion for fw in car_fw if fw.ecu == "eps"), ""))
-    model = get_nn_model_path(candidate, eps_firmware)
+    model, similarity_score = get_nn_model_path(candidate, eps_firmware)
     if model is not None:
-      ret.lateralTuning.torque.nnModelName = os.path.splitext(os.path.basename(model))[0]
+      ret.lateralTuning.torque.nnModelName = candidate
+      ret.lateralTuning.torque.nnModelFuzzyMatch = (similarity_score < 0.99)
 
     # Set params dependent on values set by the car interface
     ret.rotationalInertia = scale_rot_inertia(ret.mass, ret.wheelbase)
