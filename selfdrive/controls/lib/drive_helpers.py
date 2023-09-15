@@ -6,7 +6,7 @@ from openpilot.common.numpy_fast import clip, interp
 from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.modeld.constants import T_IDXS
 
-from selfdrive.controls.distance_based_curvature import dbc
+from openpilot.selfdrive.controls.distance_based_curvature import dbc
 # WARNING: this value was determined based on the model's training distribution,
 #          model predictions above this speed can be unpredictable
 # V_CRUISE's are in kph

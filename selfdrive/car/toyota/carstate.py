@@ -173,7 +173,7 @@ class CarState(CarStateBase):
       # ignore standstill in hybrid vehicles, since pcm allows to restart without
       # receiving any special command. Also if interceptor is detected
       ret.cruiseState.standstill = False
-    elif not self.topsng and self.CP.carFingerprint not in (NO_STOP_TIMER_CAR - TSS2_CAR):
+    elif self.CP.carFingerprint not in (NO_STOP_TIMER_CAR - TSS2_CAR):
       # ignore standstill state in certain vehicles, since pcm allows to restart with just an acceleration request
       ret.cruiseState.standstill = self.pcm_acc_status == 7
     ret.cruiseState.enabled = bool(cp.vl["PCM_CRUISE"]["CRUISE_ACTIVE"])
@@ -239,9 +239,7 @@ class CarState(CarStateBase):
     if self.CP.carFingerprint in (TSS2_CAR | RADAR_ACC_CAR):
       if not (self.CP.flags & ToyotaFlags.SMART_DSU.value):
         self.distance_btn = 1 if cp_acc.vl["ACC_CONTROL"]["DISTANCE"] == 1 else 0
-    #elif self.CP.carFingerprint in RADAR_ACC_CAR and not self.CP.flags & ToyotaFlags.DISABLE_RADAR.value and self.CP.carFingerprint != CAR.CHR_TSS2:
-      #self.distance_btn = 1 if cp.vl["ACC_CONTROL"]["DISTANCE"] == 1 else 0
-    elif self.CP.flags & ToyotaFlags.SMART_DSU.value:
+    if self.CP.flags & ToyotaFlags.SMART_DSU.value:
       self.distance_btn = 1 if cp_acc.vl["SDSU"]["FD_BUTTON"] == 1 else 0
 
     ret.distanceLines = cp.vl["PCM_CRUISE_SM"]["DISTANCE_LINES"]
@@ -324,7 +322,7 @@ class CarState(CarStateBase):
 
     # KRKeegan - Add support for toyota distance button
     if CP.flags & ToyotaFlags.SMART_DSU.value:
-      messages.append(("SDSU", 33))
+      messages.append(("SDSU", 0))
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, 0)
 
