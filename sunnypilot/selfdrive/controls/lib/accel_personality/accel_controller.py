@@ -14,27 +14,27 @@ AccelPersonality = custom.LongitudinalPlanSP.AccelerationPersonality
 
 # Acceleration Profiles
 MAX_ACCEL_PROFILES = {
-  AccelPersonality.eco:      [2.0, 1.96, 1.60, .820, .562, .33, .23, .110],
-  AccelPersonality.normal:   [2.0, 1.99, 1.74, .940, .650, .45, .30, .150],
-  AccelPersonality.sport:    [2.0, 2.00, 2.00, 1.20, .750, .55, .40, .200],
+  AccelPersonality.eco:      [2.0, 1.96, 1.60, .805, .520, .32, .23, .110],
+  AccelPersonality.normal:   [2.0, 1.99, 1.74, .850, .560, .38, .27, .155],
+  AccelPersonality.sport:    [2.0, 2.00, 2.00, 1.90, .900, .70, .40, .200],
 }
 MAX_ACCEL_BREAKPOINTS =      [0.,  4.,   6.,   9.,   16.,  25., 30., 55.]
 
 # Braking Profiles
 MIN_ACCEL_PROFILES = {
-  AccelPersonality.eco:    [-1.20, -1.20, -1.20],
-  AccelPersonality.normal: [-1.40, -1.40, -1.40],
-  AccelPersonality.sport:  [-1.50, -1.50, -1.50],
+  AccelPersonality.eco:    [-0.32, -0.32, -1.20],
+  AccelPersonality.normal: [-0.36, -0.36, -1.20],
+  AccelPersonality.sport:  [-1.20, -1.40, -1.40],
 }
-MIN_ACCEL_BREAKPOINTS =    [5.,    14.,   36.]
+MIN_ACCEL_BREAKPOINTS =    [5.,    14.,   36.] 
 
 
-DECEL_SMOOTH_ALPHA = 0.05  # Very aggressive smoothing for decel (lower = smoother)
-ACCEL_SMOOTH_ALPHA = 0.20  # Less aggressive for accel (higher = more responsive)
+DECEL_SMOOTH_ALPHA = 0.02  # Very aggressive smoothing for decel (lower = smoother)
+ACCEL_SMOOTH_ALPHA = 0.50  # Less aggressive for accel (higher = more responsive)
 
 # Asymmetric rate limiting
-MAX_DECEL_INCREASE_RATE = 0.06  # When braking harder (m/s² per second)
-MAX_DECEL_DECREASE_RATE = 0.15  # When releasing brake (m/s² per second)
+MAX_DECEL_INCREASE_RATE = 0.1  # When braking harder (m/s² per second)
+MAX_DECEL_DECREASE_RATE = 0.30  # When releasing brake (m/s² per second)
 
 
 class AccelPersonalityController:
