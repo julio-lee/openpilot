@@ -10,16 +10,50 @@ $Cxx.namespace("cereal");
 # DO rename the structs
 # DON'T change the identifier (e.g. @0x81c2f05a394cf4af)
 
-struct CustomReserved0 @0x81c2f05a394cf4af {
+struct ControlsStateExt @0x81c2f05a394cf4af {
+  alkaActive @0 :Bool;
 }
 
-struct CustomReserved1 @0xaedffd8f31e7b55d {
+struct CarStateExt @0xaedffd8f31e7b55d {
+  # dp - ALKA: lkasOn state from carstate (mirrors panda's lkas_on)
+  lkasOn @0 :Bool;
 }
 
-struct CustomReserved2 @0xf35cc4560bbf6ec2 {
+struct ModelExt @0xf35cc4560bbf6ec2 {
+  leftEdgeDetected @0 :Bool;
+  rightEdgeDetected @1 :Bool;
 }
 
-struct CustomReserved3 @0xda96579883444c35 {
+struct LiveGPS @0xda96579883444c35 {
+  # Position
+  latitude @0 :Float64;                # degrees
+  longitude @1 :Float64;               # degrees
+  altitude @2 :Float64;                # meters (WGS84)
+
+  # Motion
+  speed @3 :Float32;                   # m/s (horizontal speed)
+  bearingDeg @4 :Float32;              # degrees (heading)
+
+  # Accuracy
+  horizontalAccuracy @5 :Float32;      # meters
+  verticalAccuracy @6 :Float32;        # meters
+
+  # Status
+  gpsOK @7 :Bool;                      # livePose valid + GPS fresh
+  status @8 :Status;
+
+  enum Status {
+    noGps @0;
+    initializing @1;
+    calibrating @2;
+    valid @3;
+    recalibrating @4;
+    gpsStale @5;
+  }
+
+  # Metadata
+  unixTimestampMillis @9 :Int64;
+  lastGpsTimestamp @10 :UInt64;        # logMonoTime of last GPS
 }
 
 struct CustomReserved4 @0x80ae746ee2596b11 {
