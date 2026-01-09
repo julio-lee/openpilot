@@ -1,13 +1,3 @@
-# distutils: language = c++
-
-from msgq.visionipc.visionipc cimport cl_mem
-from msgq.visionipc.visionipc_pyx cimport CLContext as BaseCLContext
-
-cdef class CLContext(BaseCLContext):
-  pass
-
-cdef class CLMem:
-  cdef cl_mem * mem
-
-  @staticmethod
-  cdef create(void*)
+version https://git-lfs.github.com/spec/v1
+oid sha256:a2b90a3e38d394ca2ec1256defcd319da45e3774834946677a19446fa7d01e6a
+size 278
