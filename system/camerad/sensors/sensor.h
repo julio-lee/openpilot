@@ -13,7 +13,7 @@
 #include "system/camerad/sensors/ox03c10_registers.h"
 #include "system/camerad/sensors/os04c10_registers.h"
 // rick - for c3
-#include "system/camerad/sensors/ar0231_registers.
+#include "system/camerad/sensors/ar0231_registers.h
 #define ANALOG_GAIN_MAX_CNT 55
 
 class SensorInfo {
